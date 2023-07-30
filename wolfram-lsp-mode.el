@@ -63,7 +63,7 @@ See `run-hooks'."
   :type 'hook
   :group 'wolfram-lsp-mode)
 
-(defcustom wolfram-program "math"
+(defcustom wolfram-program "wolframscript"
   "Command to invoke at `run-wolfram'."
   :type 'string
   :group 'wolfram-lsp-mode)
@@ -73,7 +73,7 @@ See `run-hooks'."
   :type '(repeat string)
   :group 'wolfram-lsp-mode)
 
-(defcustom wolfram-indent 8
+(defcustom wolfram-indent 4
   "Basic Indentation for newline."
   :type 'integer
   :group 'wolfram-lsp-mode)
@@ -160,6 +160,7 @@ See `run-hooks'."
     ("^In\[[0-9]+\]:=" . font-lock-keyword-face)
     ("^Out\[[0-9]+\]=" . font-lock-keyword-face)
     ("^Out\[[0-9]+\]//[A-Za-z][A-Za-z0-9]*=" . font-lock-keyword-face)
+    ("Evaluate" . font-lock-keyword-face)
     ("\\([A-Za-z][A-Za-z0-9`]*\\)[ \t]*[\[][ \t]*[\[]" 1 "default")
     ("\\([A-Za-z][A-Za-z0-9`]*\\)[ \t]*[\[]" 1 font-lock-function-name-face)
     ("//[ \t\f\n]*\\([A-Za-z][A-Za-z0-9`]*\\)" 1 font-lock-function-name-face)
@@ -321,7 +322,7 @@ if that value is non-nil."
   (interactive "p")
   (wolfram-electric "|>" arg))
 
-;; * inferior Mathematica mode. *
+;; * inferior wolfram mode. *
 
 (defun wolfram-proc ()
   (let ((proc (get-buffer-process (if (eq major-mode 'inferior-wolfram-lsp-mode)
@@ -330,25 +331,21 @@ if that value is non-nil."
     (or proc
 	(error "No current process.  Do M-x `run-wolfram'"))))
 
-(defun wolfram-send-region (start end)
-  "Send the current region to the inferior Wolfram process."
-  (interactive "r")
-  (comint-send-region (wolfram-proc) start end)
-  (comint-send-string (wolfram-proc) "\C-j"))
 
-(define-derived-mode inferior-wolfram-lsp-mode comint-mode "Inferior Wolfram Language"
-  "Major mode for interacting with an inferior Wolfram Engine process"
+(define-derived-mode inferior-wolfram-lsp-mode comint-mode "Interactive Wolfram Language Mode"
+  "Major mode for interacting with wolframscript"
   :abbrev-table wolfram-lsp-mode-abbrev-table
   (setq comint-prompt-regexp "^(In|Out)\[[0-9]*\]:?= *")
   (wolfram-lsp-mode-variables)
   (setq mode-line-process '(":%s"))
-  (setq comint-process-echoes t))
+  (setq comint-process-echoes t)
+  )
 
 ;;;###autoload
 (defun run-wolfram (cmd)
-  "Run an inferior Mathematica process CMD, input and output via buffer *wolfram*."
+  "Run an interactive wolframscript process CMD, input and output via buffer *wolfram*."
   (interactive (list (if current-prefix-arg
-                         (read-string "Run Mathematica: " wolfram-program)
+                         (read-string "Run " wolfram-program)
                        wolfram-program)))
   (setq wolfram-program cmd)
   (let ((cmdlist (append (split-string-and-unquote wolfram-program)
@@ -358,49 +355,8 @@ if that value is non-nil."
                         (car cmdlist) nil (cdr cmdlist)))))
   (inferior-wolfram-lsp-mode))
 
-(defun wolfram-here-is-space ()
-  (let ((ca (char-after))
-	(cb (char-before)))
-    (and ca cb
-	 (string-match "[ \t\n]" (char-to-string ca))
-	 (string-match "[ \t\n]" (char-to-string cb)))))
-
-(defun wolfram-moveto-last-content ()
-  (while (wolfram-here-is-space)
-    (backward-char 1)))
-
-(defun wolfram-moveto-first-content ()
-  (while (wolfram-here-is-space)
-    (forward-char 1)))
-
-(defun wolfram-beginning-of-cell ()
-  (wolfram-moveto-last-content)
-  (if (re-search-backward "^$" nil t) (forward-char 1)
-    (goto-char (point-min))))
-
-(defun wolfram-end-of-cell ()
-  (wolfram-moveto-first-content)
-  (if (re-search-forward "^$" nil t) (backward-char 1)
-    (goto-char (point-max))))
-
-(defun wolfram-send-last-mathexp ()
-  "Send the last math expression to the inferior Mathematica process."
-  (interactive)
-  (save-excursion
-    (let ((wolfram-start (progn (wolfram-beginning-of-cell) (point)))
-	  (wolfram-end (progn (wolfram-end-of-cell) (point))))
-      (comint-send-region (wolfram-proc) wolfram-start wolfram-end)
-      (comint-send-string (wolfram-proc) "\C-j"))))
-
 
 
 ;; * Provide *
 
 (provide 'wolfram-lsp-mode)
-
-;; Local Variables:
-;; coding: utf-8-unix
-;; time-stamp-pattern: "10/Modified:\\\\?[ \t]+%:y-%02m-%02d\\\\?\n"
-;; End:
-
-;;; wolfram-lsp-mode.el ends here
