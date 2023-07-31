@@ -2229,8 +2229,8 @@ if that value is non-nil."
               :forward-token 'wolfram-smie-forward-token
               :backward-token 'wolfram-smie-backward-token)
   (wolfram-language-mode-variables)
-  (add-to-list 'auto-mode-alist '("\\.wl$" . wolfram-language-mode))
-  (add-to-list 'auto-mode-alist '("\\.wls$" . wolfram-language-mode))
+  (add-to-list 'auto-mode-alist '("\\.wl\\'" . wolfram-language-mode))
+  (add-to-list 'auto-mode-alist '("\\.wls\\'" . wolfram-language-mode))
  
     )
 
@@ -2292,19 +2292,20 @@ if that value is non-nil."
   (wolfram-language-mode-variables)
   (setq mode-line-process '(":%s"))
   (setq comint-use-promt-regexp t)
-  )
+  ;; the following is needed because the wolfram engine passes back ^M characters at beginning and end and also echoes the input with every letter being enclosed by ^M (ie. ^M.^M)
 
-
-
-;; the following is needed because the wolfram engine passes back ^M characters at beginning and end and also echoes the input with every letter being enclosed by ^M (ie. ^M.^M)
-
-(add-hook 'comint-preoutput-filter-functions
+  (add-hook 'comint-preoutput-filter-functions
             #'(lambda (txt) (if (string-match "^\\(\r.\r\\)+\r?$" txt)
   			      ""
   			    (if (string-match "^In" (string-trim txt)) 
   				(concat (string-trim txt) " ")
   			        (concat "\n" (string-trim txt) "\n\n"))
   	     )))
+  )
+
+
+
+
 
 
 ;;;###autoload
