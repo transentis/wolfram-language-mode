@@ -2229,7 +2229,8 @@ if that value is non-nil."
               :forward-token 'wolfram-smie-forward-token
               :backward-token 'wolfram-smie-backward-token)
   (wolfram-language-mode-variables)
-
+  (add-to-list 'auto-mode-alist '("\\.wl$" . wolfram-language-mode))
+  (add-to-list 'auto-mode-alist '("\\.wls$" . wolfram-language-mode))
  
     )
 

@@ -1,3 +1,0 @@
-Needs["LSPServer`"];
-
-LSPServer`StartServer[]
