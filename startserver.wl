@@ -1,3 +1,3 @@
-Needs["LSPServer`"]
+Needs["LSPServer`"];
 
-StartServer[]
+LSPServer`StartServer[]

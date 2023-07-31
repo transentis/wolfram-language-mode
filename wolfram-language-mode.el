@@ -51,6 +51,10 @@
 (require 'comint)
 (require 'smie)
 (require 'subr-x)
+(require 'eglot)
+
+(with-eval-after-load 'eglot
+    
 
 ;; ** Customs Variables
 
@@ -65,7 +69,7 @@ See `run-hooks'."
   :group 'wolfram-language-mode)
 
 (defcustom wolfram-program "wolframscript"
-  "Command to invoke at `run-wolfram'."
+  "Command to invoke at `run-wolfram-kernel'."
   :type 'string
   :group 'wolfram-language-mode)
 
@@ -2224,7 +2228,12 @@ if that value is non-nil."
   (smie-setup wolfram-smie-grammar #'wolfram-smie-rules
               :forward-token 'wolfram-smie-forward-token
               :backward-token 'wolfram-smie-backward-token)
-  (wolfram-language-mode-variables))
+  (wolfram-language-mode-variables)
+
+ 
+    )
+
+  )
 
 (defun wolfram-language-mode-variables ()
   "Local variables for both Major and Inferior mode."
@@ -2289,7 +2298,7 @@ if that value is non-nil."
 ;; the following is needed because the wolfram engine passes back ^M characters at beginning and end and also echoes the input with every letter being enclosed by ^M (ie. ^M.^M)
 
 (add-hook 'comint-preoutput-filter-functions
-            '(lambda (txt) (if (string-match "^\\(\r.\r\\)+\r?$" txt)
+            #'(lambda (txt) (if (string-match "^\\(\r.\r\\)+\r?$" txt)
   			      ""
   			    (if (string-match "^In" (string-trim txt)) 
   				(concat (string-trim txt) " ")
