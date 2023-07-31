@@ -1,7 +1,7 @@
-;;; wolfram-mode.el --- Mathematica editing and inferior mode.  -*- lexical-binding: t -*-
+;;; wolfram-languagemode.el --- Wolfram Language editing and inferior mode.  -*- lexical-binding: t -*-
 
-;; Filename: wolfram-lsp-mode.el
-;; Description: Wolfram Language editing and inferior mode that support Wolfram LSP server
+;; Filename: wolfram-language-mode.el
+;; Description: Wolfram Language editing and inferior mode that supports Wolfram LSP server
 ;; Author: Oliver Grasl <oliver.grasl@transentis.com>
 ;; Based on the wolfram-mode package created by
 ;; Modified by: Taichi Kawabata <kawabata.taichi_at_gmail.com>
@@ -50,42 +50,43 @@
 
 (require 'comint)
 (require 'smie)
+(require 'subr-x)
 
 ;; ** Customs Variables
 
-(defgroup wolfram-lsp-mode nil
+(defgroup wolfram-language-mode nil
   "Editing Wolfram Language code"
   :group 'languages)
 
-(defcustom wolfram-lsp-mode-hook nil
-  "Normal hook run when entering `wolfram-lsp-mode'.
+(defcustom wolfram-language-mode-hook nil
+  "Normal hook run when entering `wolfram-language-mode'.
 See `run-hooks'."
   :type 'hook
-  :group 'wolfram-lsp-mode)
+  :group 'wolfram-language-mode)
 
 (defcustom wolfram-program "wolframscript"
   "Command to invoke at `run-wolfram'."
   :type 'string
-  :group 'wolfram-lsp-mode)
+  :group 'wolfram-language-mode)
 
 (defcustom wolfram-program-arguments '()
   "Additional arguments to `wolfram-program'."
   :type '(repeat string)
-  :group 'wolfram-lsp-mode)
+  :group 'wolfram-language-mode)
 
 (defcustom wolfram-indent 4
   "Basic Indentation for newline."
   :type 'integer
-  :group 'wolfram-lsp-mode)
+  :group 'wolfram-language-mode)
 
 (defcustom wolfram-path nil
   "Directory in Mathematica $Path. Emacs has to be able to write in this directory."
   :type 'string
-  :group 'wolfram-lsp-mode)
+  :group 'wolfram-language-mode)
 
 ;; ** wolfram-mode
 
-(defvar wolfram-lsp-mode-map
+(defvar wolfram-language-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-m" 'newline-and-indent)
     (define-key map "]" 'wolfram-electric-braket)
@@ -95,9 +96,9 @@ See `run-hooks'."
     (define-key map "\C-c\C-e" 'wolfram-send-last-mathexp)
     (define-key map "\C-c\C-s" 'wolfram-send-last-mathexp)
     map)
-  "Keymap for `wolfram-lsp-mode'.")
+  "Keymap for `wolfram-language-mode'.")
 
-(defvar wolfram-lsp-mode-syntax-table
+(defvar wolfram-language-mode-syntax-table
   (let ((syntax-table (make-syntax-table)))
     ;; white space
     (modify-syntax-entry ?  " " syntax-table)
@@ -147,9 +148,9 @@ See `run-hooks'."
     (modify-syntax-entry ?+ "_" syntax-table)
 
     syntax-table)
-  "Syntax table used in `wolfram-lsp-mode'.")
+  "Syntax table used in `wolfram-language-mode'.")
 
-(define-abbrev-table 'wolfram-lsp-mode-abbrev-table ())
+(define-abbrev-table 'wolfram-language-mode-abbrev-table ())
 
 (defvar wolfram-syntax-propertize-function
   (syntax-propertize-rules
@@ -2212,22 +2213,22 @@ See `run-hooks'."
 (defalias 'wolfram-smie-backward-token 'smie-default-backward-token)
 
 ;;;###autoload
-(define-derived-mode wolfram-lsp-mode prog-mode "Wolfram Language"
-  "Major mode for editing Wolfram Language files in Emacs using the Wolfram LSP server.
+(define-derived-mode wolfram-language-mode prog-mode "Wolfram Language"
+  "Major mode for editing Wolfram Language files in Emacs, compatible with the Wolfram LSP server.
 
-\\{wolfram-lsp-mode-map}
-Entry to this mode calls the value of `wolfram-lsp-mode-hook'
+\\{wolfram-language-mode-map}
+Entry to this mode calls the value of `wolfram-language-mode-hook'
 if that value is non-nil."
-  :syntax-table wolfram-lsp-mode-syntax-table
-  :abbrev-table wolfram-lsp-mode-abbrev-table
+  :syntax-table wolfram-language-mode-syntax-table
+  :abbrev-table wolfram-language-mode-abbrev-table
   (smie-setup wolfram-smie-grammar #'wolfram-smie-rules
               :forward-token 'wolfram-smie-forward-token
               :backward-token 'wolfram-smie-backward-token)
-  (wolfram-lsp-mode-variables))
+  (wolfram-language-mode-variables))
 
-(defun wolfram-lsp-mode-variables ()
+(defun wolfram-language-mode-variables ()
   "Local variables for both Major and Inferior mode."
-  (set-syntax-table wolfram-lsp-mode-syntax-table)
+  (set-syntax-table wolfram-language-mode-syntax-table)
   ;; set local variables
   (setq-local comment-start "(*")
   (setq-local comment-end "*)")
@@ -2266,26 +2267,39 @@ if that value is non-nil."
 
 ;; * inferior wolfram mode. *
 
-(defun wolfram-proc ()
-  (let ((proc (get-buffer-process (if (eq major-mode 'inferior-wolfram-lsp-mode)
+(defun wolfram-kernel-proc ()
+  (let ((proc (get-buffer-process (if (eq major-mode 'inferior-wolfram-language-mode)
 				      (current-buffer)
 				    "*wolfram*"))))
     (or proc
-	(error "No current process.  Do M-x `run-wolfram'"))))
+	(error "No current process.  Do M-x `run-wolfram-kernel'"))))
 
 
-(define-derived-mode inferior-wolfram-lsp-mode comint-mode "Interactive Wolfram Language Mode"
-  "Major mode for interacting with wolframscript"
-  :abbrev-table wolfram-lsp-mode-abbrev-table
+(define-derived-mode inferior-wolfram-language-mode comint-mode "Wolfram Language REPL"
+  "Sets up a REPL for the Wolfram Language."
+  :abbrev-table wolfram-language-mode-abbrev-table
   (setq comint-prompt-regexp "^(In|Out)\[[0-9]*\]:?= *")
-  (wolfram-lsp-mode-variables)
+  (wolfram-language-mode-variables)
   (setq mode-line-process '(":%s"))
-  (setq comint-process-echoes t)
+  (setq comint-use-promt-regexp t)
   )
 
+
+
+;; the following is needed because the wolfram engine passes back ^M characters at beginning and end and also echoes the input with every letter being enclosed by ^M (ie. ^M.^M)
+
+(add-hook 'comint-preoutput-filter-functions
+            '(lambda (txt) (if (string-match "^\\(\r.\r\\)+\r?$" txt)
+  			      ""
+  			    (if (string-match "^In" (string-trim txt)) 
+  				(concat (string-trim txt) " ")
+  			        (concat "\n" (string-trim txt) "\n\n"))
+  	     )))
+
+
 ;;;###autoload
-(defun run-wolfram (cmd)
-  "Run an interactive wolframscript process CMD, input and output via buffer *wolfram*."
+(defun run-wolfram-kernel (cmd)
+  "Run an interactive wolframscript process CMD, input and output via buffer *wolfram language REPL*."
   (interactive (list (if current-prefix-arg
                          (read-string "Run " wolfram-program)
                        wolfram-program)))
@@ -2293,12 +2307,12 @@ if that value is non-nil."
   (let ((cmdlist (append (split-string-and-unquote wolfram-program)
                          wolfram-program-arguments)))
     (pop-to-buffer-same-window
-     (set-buffer (apply 'make-comint-in-buffer "wolfram" (get-buffer "*wolfram*")
+     (set-buffer (apply 'make-comint-in-buffer "wolfram" (get-buffer "*wolfram language REPL*")
                         (car cmdlist) nil (cdr cmdlist)))))
-  (inferior-wolfram-lsp-mode))
+  (inferior-wolfram-language-mode))
 
 
 
 ;; * Provide *
 
-(provide 'wolfram-lsp-mode)
+(provide 'wolfram-language-mode)
