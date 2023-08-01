@@ -51,9 +51,6 @@
 (require 'comint)
 (require 'smie)
 (require 'subr-x)
-(require 'eglot)
-
-(with-eval-after-load 'eglot
     
 
 ;; ** Customs Variables
@@ -2229,12 +2226,13 @@ if that value is non-nil."
               :forward-token 'wolfram-smie-forward-token
               :backward-token 'wolfram-smie-backward-token)
   (wolfram-language-mode-variables)
-  (add-to-list 'auto-mode-alist '("\\.wl\\'" . wolfram-language-mode))
-  (add-to-list 'auto-mode-alist '("\\.wls\\'" . wolfram-language-mode))
+ 
  
     )
 
-  )
+
+(add-to-list 'auto-mode-alist '("\\.wl\\'" . wolfram-language-mode))
+(add-to-list 'auto-mode-alist '("\\.wls\\'" . wolfram-language-mode))
 
 (defun wolfram-language-mode-variables ()
   "Local variables for both Major and Inferior mode."
