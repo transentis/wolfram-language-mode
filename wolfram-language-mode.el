@@ -75,7 +75,7 @@ See `run-hooks'."
   :type '(repeat string)
   :group 'wolfram-language-mode)
 
-(defcustom wolfram-indent 4
+(defcustom wolfram-indent 8
   "Basic Indentation for newline."
   :type 'integer
   :group 'wolfram-language-mode)
@@ -2208,7 +2208,7 @@ See `run-hooks'."
     (`(,_ . ";") (smie-rule-separator kind))
     (`(,_ . ",") (smie-rule-separator kind))
     (`(:elem . ,_) 0)
-    (t nil)))
+    (_ nil)))
 
 (defalias 'wolfram-smie-forward-token 'smie-default-forward-token)
 (defalias 'wolfram-smie-backward-token 'smie-default-backward-token)
